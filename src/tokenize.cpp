@@ -469,6 +469,45 @@ static bool parse_comment(tok_ctx& ctx, chunk_t& pc)
    return(true);
 }
 
+/**
+ * Figure of the length of the code placeholder at text, if present.
+ * This is only for Xcode which sometimes inserts temporary code placeholder chunks, which in plaintext <#look like this#>.
+ *
+ * @param pc   The structure to update, str is an input.
+ * @return     Whether a placeholder was parsed.
+ */
+static bool parse_code_placeholder(tok_ctx& ctx, chunk_t& pc)
+{
+   int last2 = 0, last1 = 0;
+
+   if ((ctx.peek() != '<') || (ctx.peek(1) != '#'))
+   {
+      return(false);
+   }
+
+   ctx.save();
+
+   /* account for opening two chars '<#' */
+   pc.str = ctx.get();
+   pc.str.append(ctx.get());
+
+   /* grab everything until '#>', fail if not found. */
+   while (ctx.more())
+   {
+      last2 = last1;
+      last1 = ctx.get();
+      pc.str.append(last1);
+
+      if ((last2 == '#') && (last1 == '>'))
+      {
+         pc.type = CT_WORD;
+         return(true);
+      }
+   }
+   ctx.restore();
+   return(false);
+}
+
 
 /**
  * Parse any attached suffix, which may be a user-defined literal suffix.
@@ -806,12 +845,18 @@ static bool parse_cs_string(tok_ctx& ctx, chunk_t& pc)
 {
    pc.str = ctx.get();
    pc.str.append(ctx.get());
+   pc.type = CT_STRING;
 
    /* go until we hit a zero (end of file) or a single " */
    while (ctx.more())
    {
       int ch = ctx.get();
       pc.str.append(ch);
+      if ((ch == '\n') || (ch == '\r'))
+      {
+         pc.type = CT_STRING_MULTI;
+         pc.nl_count++;
+      }
       if (ch == '"')
       {
          if (ctx.peek() == '"')
@@ -825,8 +870,43 @@ static bool parse_cs_string(tok_ctx& ctx, chunk_t& pc)
       }
    }
 
-   pc.type = CT_STRING;
    return(true);
+}
+
+
+/**
+ * VALA verbatim string, ends with three quotes (""")
+ *
+ * @param pc   The structure to update, str is an input.
+ */
+static void parse_verbatim_string(tok_ctx& ctx, chunk_t& pc)
+{
+   pc.type = CT_STRING;
+
+   // consume the initial """
+   pc.str = ctx.get();
+   pc.str.append(ctx.get());
+   pc.str.append(ctx.get());
+
+   /* go until we hit a zero (end of file) or a """ */
+   while (ctx.more())
+   {
+      int ch = ctx.get();
+      pc.str.append(ch);
+      if ((ch == '"') &&
+          (ctx.peek() == '"') &&
+          (ctx.peek(1) == '"'))
+      {
+         pc.str.append(ctx.get());
+         pc.str.append(ctx.get());
+         break;
+      }
+      if ((ch == '\n') || (ch == '\r'))
+      {
+         pc.type = CT_STRING_MULTI;
+         pc.nl_count++;
+      }
+   }
 }
 
 
@@ -919,7 +999,7 @@ static bool parse_cr_string(tok_ctx& ctx, chunk_t& pc, int q_idx)
 bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
 {
    int             ch;
-   static unc_text interface("@interface");
+   static unc_text intr_txt("@interface");
 
    /* The first character is already valid */
    pc.str.clear();
@@ -960,7 +1040,7 @@ bool parse_word(tok_ctx& ctx, chunk_t& pc, bool skipcheck)
    {
       /* '@interface' is reserved, not an interface itself */
       if ((cpd.lang_flags & LANG_JAVA) && pc.str.startswith("@") &&
-          !pc.str.equals(interface))
+          !pc.str.equals(intr_txt))
       {
          pc.type = CT_ANNOTATION;
       }
@@ -1004,16 +1084,24 @@ static bool parse_whitespace(tok_ctx& ctx, chunk_t& pc)
             cpd.le_counts[LE_CR]++;
          }
          nl_count++;
+         pc.orig_prev_sp = 0;
          break;
 
       case '\n':
          /* LF ending */
          cpd.le_counts[LE_LF]++;
          nl_count++;
+         pc.orig_prev_sp = 0;
          break;
 
       case '\t':
+         pc.orig_prev_sp += calc_next_tab_column(cpd.column, cpd.settings[UO_input_tab_size].n) - cpd.column;
+         break;
+
       case ' ':
+         pc.orig_prev_sp++;
+         break;
+
       default:
          break;
       }
@@ -1266,6 +1354,12 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
       return(true);
    }
 
+   /* Parse code placeholders */
+   if (parse_code_placeholder(ctx, pc))
+   {
+      return(true);
+   }
+
    /* Check for C# literal strings, ie @"hello" and identifiers @for*/
    if (((cpd.lang_flags & LANG_CS) != 0) && (ctx.peek() == '@'))
    {
@@ -1280,6 +1374,16 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
          parse_word(ctx, pc, true);
          return(true);
       }
+   }
+
+   /* handle VALA """ strings """ */
+   if (((cpd.lang_flags & LANG_VALA) != 0) &&
+       (ctx.peek() == '"') &&
+       (ctx.peek(1) == '"') &&
+       (ctx.peek(2) == '"'))
+   {
+       parse_verbatim_string(ctx, pc);
+       return true;
    }
 
    /* handle C++0x strings u8"x" u"x" U"x" R"x" u8R"XXX(I'm a "raw UTF-8" string.)XXX" */
@@ -1389,8 +1493,8 @@ static bool parse_next(tok_ctx& ctx, chunk_t& pc)
       }
    }
 
-   /* Check for Objective C literals */
-   if ((cpd.lang_flags & LANG_OC) && (ctx.peek() == '@'))
+   /* Check for Objective C literals and VALA identifiers ('@1', '@if')*/
+   if ((cpd.lang_flags & (LANG_OC | LANG_VALA)) && (ctx.peek() == '@'))
    {
       int nc = ctx.peek(1);
       if ((nc == '"') || (nc == '\''))
@@ -1464,6 +1568,7 @@ void tokenize(const deque<int>& data, chunk_t *ref)
    chunk_t            *rprev = NULL;
    struct parse_frame frm;
    bool               last_was_tab = false;
+   int                prev_sp = 0;
 
    memset(&frm, 0, sizeof(frm));
 
@@ -1482,8 +1587,11 @@ void tokenize(const deque<int>& data, chunk_t *ref)
       if (chunk.type == CT_WHITESPACE)
       {
          last_was_tab = chunk.after_tab;
+         prev_sp = chunk.orig_prev_sp;
          continue;
       }
+      chunk.orig_prev_sp = prev_sp;
+      prev_sp = 0;
 
       if (chunk.type == CT_NEWLINE)
       {
@@ -1559,7 +1667,7 @@ void tokenize(const deque<int>& data, chunk_t *ref)
          {
             if ((pc->type < CT_PP_DEFINE) || (pc->type > CT_PP_OTHER))
             {
-               pc->type = CT_PP_OTHER;
+               set_chunk_type(pc, CT_PP_OTHER);
             }
             cpd.in_preproc = pc->type;
          }
@@ -1570,7 +1678,7 @@ void tokenize(const deque<int>& data, chunk_t *ref)
          if ((pc->type == CT_POUND) &&
              ((rprev == NULL) || (rprev->type == CT_NEWLINE)))
          {
-            pc->type       = CT_PREPROC;
+            set_chunk_type(pc, CT_PREPROC);
             pc->flags     |= PCF_IN_PREPROC;
             cpd.in_preproc = CT_PREPROC;
          }

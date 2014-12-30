@@ -85,6 +85,7 @@
 00142  ben.cfg                 c/type-cast.c
 00143  ben.cfg                 c/t3.in.c
 00144  ben.cfg                 c/align-proto-vars.c
+00145  ben.cfg                 c/vardefcol.c
 
 # casts
 00150  ben.cfg                 c/casts.c
@@ -162,6 +163,7 @@
 00615  pp-indent-2.cfg         c/pp-nest.c
 00616  pp_if_indent-1.cfg      c/pp-if-indent.c
 00617  rdan.cfg                c/pp-if-indent.c
+00618  pp_if_indent-4.cfg      c/pp-if-indent.c
 
 00620  ben.cfg                 c/indent-assign.c
 00621  nl_endif.cfg            c/nl_endif.c
@@ -282,3 +284,6 @@
 02503 ger.cfg			c/pp_concat_asn1.h
 
 02504 align_keep_extra.cfg      c/align_keep_extra.c
+
+09594 ben.cfg                   c/sf594.c
+09588 ben.cfg                   c/sf588.c

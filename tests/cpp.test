@@ -147,6 +147,7 @@
 30805 ptr_star-1.cfg                   cpp/ptr-star.cpp
 30806 ptr_star-2.cfg                   cpp/ptr-star.cpp
 30807 ptr_star-3.cfg                   cpp/ptr-star.cpp
+30808 ptr_star-4.cfg                   cpp/ptr-star.cpp
 
 30810 ben.cfg                          cpp/ptr-star.cpp
 30811 avalon4.cfg                      cpp/misc3.cpp
@@ -162,6 +163,7 @@
 
 30830 kw_subst2.cfg                    cpp/kw_subst.cpp
 30831 kw_subst.cfg                     cpp/kw_subst2.cpp
+30832 kw_subst4.cfg                    cpp/kw_subst.cpp
 
 30840 nl_func_type_name_remove.cfg     cpp/nl_func_type_name.cpp
 30841 nl_func_type_name_force.cfg      cpp/nl_func_type_name.cpp
@@ -183,6 +185,7 @@
 30910 indent_namespace-t.cfg           cpp/indent_namespace.h
 30911 indent_namespace-f.cfg           cpp/indent_namespace.h
 30912 long_namespace.cfg               cpp/long_namespace.cpp
+30913 indent_namespace-t.cfg           cpp/indent_namespace2.h
 
 30920 ben.cfg                          cpp/indent-off.cpp
 30921 ben.cfg                          cpp/variadic-template.h
@@ -206,3 +209,8 @@
 30950 sp_before_tr_emb_cmt-f.cfg       cpp/sp_before_tr_emb_cmt_input.cpp
 30951 sp_before_tr_emb_cmt-a.cfg       cpp/sp_before_tr_emb_cmt_input.cpp
 30955 indent_ctor_init.cfg             cpp/indent_ctor_init.cpp
+
+31562 sf562.cfg                        cpp/sf562.cpp
+31567 sf567.cfg                        cpp/sf567.cpp
+31583 sf583.cfg                        cpp/sf583.cpp
+31593 sf593.cfg                        cpp/sf593.cpp

@@ -17,6 +17,7 @@ static chunk_t *pawn_process_func_def(chunk_t *pc);
 
 chunk_t *pawn_add_vsemi_after(chunk_t *pc)
 {
+   LOG_FUNC_ENTRY();
    if ((pc->type == CT_VSEMICOLON) ||
        (pc->type == CT_SEMICOLON))
    {
@@ -52,6 +53,7 @@ chunk_t *pawn_add_vsemi_after(chunk_t *pc)
  */
 void pawn_scrub_vsemi(void)
 {
+   LOG_FUNC_ENTRY();
    if (!cpd.settings[UO_mod_pawn_semicolon].b)
    {
       return;
@@ -89,6 +91,7 @@ void pawn_scrub_vsemi(void)
  */
 static bool pawn_continued(chunk_t *pc, int br_level)
 {
+   LOG_FUNC_ENTRY();
    if (pc == NULL)
    {
       return(false);
@@ -138,6 +141,7 @@ static bool pawn_continued(chunk_t *pc, int br_level)
  */
 void pawn_prescan(void)
 {
+   LOG_FUNC_ENTRY();
    /* Start at the beginning and step through the entire file, and clean up
     * any questionable stuff
     */
@@ -183,6 +187,7 @@ void pawn_prescan(void)
  */
 static chunk_t *pawn_process_line(chunk_t *start)
 {
+   LOG_FUNC_ENTRY();
    chunk_t *pc;
    chunk_t *fcn = NULL;
 
@@ -247,6 +252,7 @@ static chunk_t *pawn_process_line(chunk_t *start)
  */
 static chunk_t *pawn_process_variable(chunk_t *start)
 {
+   LOG_FUNC_ENTRY();
    chunk_t *prev = NULL;
    chunk_t *pc   = start;
 
@@ -270,6 +276,7 @@ static chunk_t *pawn_process_variable(chunk_t *start)
 
 void pawn_add_virtual_semicolons(void)
 {
+   LOG_FUNC_ENTRY();
    chunk_t *prev;
    chunk_t *pc;
 
@@ -315,6 +322,7 @@ void pawn_add_virtual_semicolons(void)
  */
 static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn)
 {
+   LOG_FUNC_ENTRY();
    chunk_t *last;
 
    /* handle prototypes */
@@ -326,7 +334,7 @@ static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn)
       {
          LOG_FMT(LPFUNC, "%s: %d] '%s' proto due to semicolon\n", __func__,
                  fcn->orig_line, fcn->str.c_str());
-         fcn->type = CT_FUNC_PROTO;
+         set_chunk_type(fcn, CT_FUNC_PROTO);
          return(last);
       }
    }
@@ -339,7 +347,7 @@ static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn)
                  fcn->orig_line, fcn->str.c_str(),
                  get_token_name(fcn->type),
                  get_token_name(start->type));
-         fcn->type = CT_FUNC_PROTO;
+         set_chunk_type(fcn, CT_FUNC_PROTO);
          return(chunk_get_next_nc(fcn));
       }
    }
@@ -351,12 +359,13 @@ static chunk_t *pawn_mark_function0(chunk_t *start, chunk_t *fcn)
 
 static chunk_t *pawn_process_func_def(chunk_t *pc)
 {
+   LOG_FUNC_ENTRY();
    /* We are on a function definition */
    chunk_t *clp;
    chunk_t *last;
    chunk_t *next;
 
-   pc->type = CT_FUNC_DEF;
+   set_chunk_type(pc, CT_FUNC_DEF);
 
    /* If we don't have a brace open right after the close fparen, then
     * we need to add virtual braces around the function body.
@@ -376,8 +385,8 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
       LOG_FMT(LPFUNC, "%s: %d] '%s' has state angle open %s\n", __func__,
               pc->orig_line, pc->str.c_str(), get_token_name(last->type));
 
-      last->type        = CT_ANGLE_OPEN;
-      last->parent_type = CT_FUNC_DEF;
+      set_chunk_type(last, CT_ANGLE_OPEN);
+      set_chunk_parent(last, CT_FUNC_DEF);
       while (((last = chunk_get_next(last)) != NULL) &&
              !chunk_is_str(last, ">", 1))
       {
@@ -387,8 +396,8 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
       {
          LOG_FMT(LPFUNC, "%s: %d] '%s' has state angle close %s\n", __func__,
                  pc->orig_line, pc->str.c_str(), get_token_name(last->type));
-         last->type        = CT_ANGLE_CLOSE;
-         last->parent_type = CT_FUNC_DEF;
+         set_chunk_type(last, CT_ANGLE_CLOSE);
+         set_chunk_parent(last, CT_FUNC_DEF);
       }
       last = chunk_get_next_ncnl(last);
    }
@@ -399,11 +408,11 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
    }
    if (last->type == CT_BRACE_OPEN)
    {
-      last->parent_type = CT_FUNC_DEF;
+      set_chunk_parent(last, CT_FUNC_DEF);
       last = chunk_get_next_type(last, CT_BRACE_CLOSE, last->level);
       if (last != NULL)
       {
-         last->parent_type = CT_FUNC_DEF;
+         set_chunk_parent(last, CT_FUNC_DEF);
       }
    }
    else
@@ -470,6 +479,7 @@ static chunk_t *pawn_process_func_def(chunk_t *pc)
  */
 chunk_t *pawn_check_vsemicolon(chunk_t *pc)
 {
+   LOG_FUNC_ENTRY();
    chunk_t *vb_open;
    chunk_t *prev;
 

@@ -196,6 +196,8 @@ void register_options(void)
                   "Add or remove space before assignment operator '=', '+=', etc. Overrides sp_assign.");
    unc_add_option("sp_after_assign", UO_sp_after_assign, AT_IARF,
                   "Add or remove space after assignment operator '=', '+=', etc. Overrides sp_assign.");
+   unc_add_option("sp_enum_paren", UO_sp_enum_paren, AT_IARF,
+                  "Add or remove space in 'NS_ENUM ('");
    unc_add_option("sp_enum_assign", UO_sp_enum_assign, AT_IARF,
                   "Add or remove space around assignment '=' in enum");
    unc_add_option("sp_enum_before_assign", UO_sp_enum_before_assign, AT_IARF,
@@ -231,6 +233,8 @@ void register_options(void)
                   "Add or remove space between pointer stars '*'");
    unc_add_option("sp_after_ptr_star", UO_sp_after_ptr_star, AT_IARF,
                   "Add or remove space after pointer star '*', if followed by a word.");
+   unc_add_option("sp_after_ptr_star_qualifier", UO_sp_after_ptr_star_qualifier, AT_IARF,
+                   "Add or remove space after pointer star '*', if followed by a qualifier.");
    unc_add_option("sp_after_ptr_star_func", UO_sp_after_ptr_star_func, AT_IARF,
                   "Add or remove space after a pointer star '*', if followed by a func proto/def.");
    unc_add_option("sp_ptr_star_paren", UO_sp_ptr_star_paren, AT_IARF,
@@ -365,6 +369,8 @@ void register_options(void)
                   "Add or remove space between ']' and '(' when part of a function call.");
    unc_add_option("sp_fparen_brace", UO_sp_fparen_brace, AT_IARF,
                   "Add or remove space between ')' and '{' of function");
+   unc_add_option("sp_fparen_dbrace", UO_sp_fparen_dbrace, AT_IARF,
+                  "Java: Add or remove space between ')' and '{{' of double brace initializer.");
    unc_add_option("sp_func_call_paren", UO_sp_func_call_paren, AT_IARF,
                   "Add or remove space between function name and '(' on function calls");
    unc_add_option("sp_func_call_paren_empty", UO_sp_func_call_paren_empty, AT_IARF,
@@ -568,8 +574,13 @@ void register_options(void)
                   "Disabled indenting struct braces if indent_braces is true");
    unc_add_option("indent_brace_parent", UO_indent_brace_parent, AT_BOOL,
                   "Indent based on the size of the brace parent, i.e. 'if' => 3 spaces, 'for' => 4 spaces, etc.");
+   unc_add_option("indent_paren_open_brace", UO_indent_paren_open_brace, AT_BOOL,
+                  "Indent based on the paren open instead of the brace open in '({\\n', default is to indent by brace.");
    unc_add_option("indent_namespace", UO_indent_namespace, AT_BOOL,
                   "Whether the 'namespace' body is indented");
+   unc_add_option("indent_namespace_single_indent", UO_indent_namespace_single_indent, AT_BOOL,
+                  "Only indent one namespace and no sub-namepaces.\n"
+                  "Requires indent_namespace=true.");
    unc_add_option("indent_namespace_level", UO_indent_namespace_level, AT_NUM,
                   "The number of spaces to indent a namespace block");
    unc_add_option("indent_namespace_limit", UO_indent_namespace_limit, AT_NUM,
@@ -877,6 +888,8 @@ void register_options(void)
                   "Add or remove a newline between the return keyword and return expression.");
    unc_add_option("nl_after_semicolon", UO_nl_after_semicolon, AT_BOOL,
                   "Whether to put a newline after semicolons, except in 'for' statements");
+   unc_add_option("nl_paren_dbrace_open", UO_nl_paren_dbrace_open, AT_IARF,
+                  "Java: Control the newline between the ')' and '{{' of the double brace initializer.");
    unc_add_option("nl_after_brace_open", UO_nl_after_brace_open, AT_BOOL,
                   "Whether to put a newline after brace open.\n"
                   "This also adds a newline before the matching brace close.");
@@ -1158,7 +1171,7 @@ void register_options(void)
    unc_add_option("align_pp_define_gap", UO_align_pp_define_gap, AT_NUM,
                   "The minimum space between label and value of a preprocessor define");
    unc_add_option("align_pp_define_span", UO_align_pp_define_span, AT_NUM,
-                  "The span for aligning on '#define' bodies (0=don't align)", "", 0, 5000);
+                  "The span for aligning on '#define' bodies (0=don't align, other=number of lines including comments between blocks)", "", 0, 5000);
    unc_add_option("align_left_shift", UO_align_left_shift, AT_BOOL,
                   "Align lines that start with '<<' with previous '<<'. Default=true");
 
@@ -1177,6 +1190,8 @@ void register_options(void)
                   "0: no reflowing (apart from the line wrapping due to cmt_width)\n"
                   "1: no touching at all\n"
                   "2: full reflow\n", "", 0, 2);
+   unc_add_option("cmt_convert_tab_to_spaces", UO_cmt_convert_tab_to_spaces, AT_BOOL,
+                  "Whether to convert all tabs to spaces in comments. Default is to leave tabs inside comments alone, unless used for indenting.");
    unc_add_option("cmt_indent_multi", UO_cmt_indent_multi, AT_BOOL,
                   "If false, disable all multi-line comment changes, including cmt_width. keyword substitution, and leading chars.\n"
                   "Default is true.");
@@ -1284,11 +1299,13 @@ void register_options(void)
 
    unc_begin_group(UG_preprocessor, "Preprocessor options");
    unc_add_option("pp_indent", UO_pp_indent, AT_IARF,
-                  "Control indent of preprocessors inside #if blocks at brace level 0");
+                  "Control indent of preprocessors inside #if blocks at brace level 0 (file-level)");
    unc_add_option("pp_indent_at_level", UO_pp_indent_at_level, AT_BOOL,
                   "Whether to indent #if/#else/#endif at the brace level (true) or from column 1 (false)");
    unc_add_option("pp_indent_count", UO_pp_indent_count, AT_NUM,
-                  "If pp_indent_at_level=false, specifies the number of columns to indent per level. Default=1.");
+	              "Specifies the number of columns to indent preprocessors per level at brace level 0 (file-level).\n"
+                  "If pp_indent_at_level=false, specifies the number of columns to indent preprocessors per level at brace level > 0 (function-level).\n"
+				  "Default=1.");
    unc_add_option("pp_space", UO_pp_space, AT_IARF,
                   "Add or remove space after # based on pp_level of #if blocks");
    unc_add_option("pp_space_count", UO_pp_space_count, AT_NUM,
@@ -1298,9 +1315,11 @@ void register_options(void)
    unc_add_option("pp_region_indent_code", UO_pp_region_indent_code, AT_BOOL,
                   "Whether to indent the code between #region and #endregion");
    unc_add_option("pp_indent_if", UO_pp_indent_if, AT_NUM,
-                  "If pp_indent_at_level=true, sets the indent for #if, #else, and #endif when not at file-level");
+                  "If pp_indent_at_level=true, sets the indent for #if, #else, and #endif when not at file-level.\n"
+				  "0:  indent preprocessors using output_tab_size.\n"
+				  ">0: column at which all preprocessors will be indented.");
    unc_add_option("pp_if_indent_code", UO_pp_if_indent_code, AT_BOOL,
-                  "Control whether to indent the code between #if, #else and #endif when not at file-level");
+                  "Control whether to indent the code between #if, #else and #endif.");
    unc_add_option("pp_define_at_level", UO_pp_define_at_level, AT_BOOL,
                   "Whether to indent '#define' at the brace level (true) or from column 1 (false)");
 }
@@ -1678,6 +1697,31 @@ int load_option_file(const char *filename)
 
          cpd.line_number = save_line_no;
       }
+      else if (strcasecmp(args[0], "file_ext") == 0)
+      {
+         if (argc < 3)
+         {
+            LOG_FMT(LWARN, "%s:%d 'file_ext' requires at least three arguments\n",
+                    filename, cpd.line_number);
+         }
+         else
+         {
+            for (idx = 2; idx < argc; idx++)
+            {
+               const char *lang_name = extension_add(args[idx], args[1]);
+               if (lang_name)
+               {
+                  LOG_FMT(LNOTE, "%s:%d file_ext '%s' => '%s'\n",
+                          filename, cpd.line_number, args[idx], lang_name);
+               }
+               else
+               {
+                  LOG_FMT(LWARN, "%s:%d file_ext has unknown language '%s'\n",
+                          filename, cpd.line_number, args[1]);
+               }
+            }
+         }
+      }
       else
       {
          /* must be a regular option = value */
@@ -1805,6 +1849,11 @@ int save_option_file(FILE *pfile, bool withDoc)
               "# all tokens are separated by any mix of ',' commas, '=' equal signs\n"
               "# and whitespace (space, tab)\n"
               "#\n"
+              "# You can add support for other file extensions using the 'file_ext' command.\n"
+              "# The first arg is the language name used with the '-l' option.\n"
+              "# The remaining args are file extensions, matched with 'endswith'.\n"
+              "#   file_ext CPP .ch .cxx .cpp.in\n"
+              "#\n"
               );
    }
 
@@ -1813,6 +1862,9 @@ int save_option_file(FILE *pfile, bool withDoc)
 
    /* Print custom defines */
    print_defines(pfile);
+
+   /* Print custom file extensions */
+   print_extensions(pfile);
 
    return(0);
 }

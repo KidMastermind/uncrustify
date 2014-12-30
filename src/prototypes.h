@@ -24,6 +24,8 @@ void log_pcf_flags(log_sev_t sev, UINT64 flags);
 const char *path_basename(const char *path);
 int path_dirname_len(const char *filename);
 const char *get_file_extension(int& idx);
+void print_extensions(FILE *pfile);
+const char *extension_add(const char *ext_text, const char *lang_text);
 
 
 /*
@@ -73,8 +75,7 @@ void indent_preproc(void);
 void indent_to_column(chunk_t *pc, int column);
 void align_to_column(chunk_t *pc, int column);
 
-#define reindent_line(pc, col)    reindent_line2(pc, col, __func__, __LINE__)
-void reindent_line2(chunk_t *pc, int column, const char *fcn_name, int lineno);
+void reindent_line(chunk_t *pc, int column);
 void quick_indent_again(void);
 
 
@@ -164,33 +165,14 @@ void annotations_newlines(void);
 void newline_after_multiline_comment(void);
 void do_blank_lines(void);
 
-#define newline_iarf(pc, av)    newline_iarf2(pc, av, __func__, __LINE__)
-void newline_iarf2(chunk_t *pc, argval_t av, const char *fcn, int line);
+void newline_iarf(chunk_t *pc, argval_t av);
 
-#define newline_add_before(pc)    newline_add_before2(pc, __func__, __LINE__)
-chunk_t *newline_add_before2(chunk_t *pc, const char *fcn, int line);
-
-#define newline_force_before(pc)    newline_force_before2(pc, __func__, __LINE__)
-chunk_t *newline_force_before2(chunk_t *pc, const char *fcn, int line);
-
-#define newline_add_after(pc)     newline_add_after2(pc, __func__, __LINE__)
-chunk_t *newline_add_after2(chunk_t *pc, const char *fcn, int line);
-
-#define newline_force_after(pc)     newline_force_after2(pc, __func__, __LINE__)
-chunk_t *newline_force_after2(chunk_t *pc, const char *fcn, int line);
-
-
-#define newline_del_between(start, end) \
-   newline_del_between2(start, end, __func__, __LINE__)
-
-void newline_del_between2(chunk_t *start, chunk_t *end,
-                          const char *func, int line);
-
-#define newline_add_between(start, end) \
-   newline_add_between2(start, end, __func__, __LINE__)
-
-chunk_t *newline_add_between2(chunk_t *start, chunk_t *end,
-                              const char *func, int line);
+chunk_t *newline_add_before(chunk_t *pc);
+chunk_t *newline_force_before(chunk_t *pc);
+chunk_t *newline_add_after(chunk_t *pc);
+chunk_t *newline_force_after(chunk_t *pc);
+void newline_del_between(chunk_t *start, chunk_t *end);
+chunk_t *newline_add_between(chunk_t *start, chunk_t *end);
 
 /*
  *  tokenize.cpp
@@ -280,10 +262,9 @@ void print_universal_indent_cfg(FILE *pfile);
 /*
  * unicode.cpp
  */
-void write_bom(FILE *pf, CharEncoding enc);
-void write_char(FILE *pf, int ch, CharEncoding enc);
-void write_string(FILE *pf, const deque<int>& text, CharEncoding enc);
-void write_string(FILE *pf, const char *ascii_text, CharEncoding enc);
+void write_bom();
+void write_char(int ch);
+void write_string(const unc_text& text);
 bool decode_unicode(const vector<UINT8>& in_data, deque<int>& out_data, CharEncoding& enc, bool& has_bom);
 void encode_utf8(int ch, vector<UINT8>& res);
 

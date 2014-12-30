@@ -100,6 +100,8 @@ enum uncrustify_options
    UO_utf8_force,
    UO_utf8_bom,
 
+   UO_dont_protect_xcode_code_placeholders,
+
    UO_input_tab_size,           // tab size on input file: usually 8
    UO_output_tab_size,          // tab size for output: usually 8
 
@@ -136,6 +138,7 @@ enum uncrustify_options
    UO_indent_braces_no_class,    // whether to not indent the class braces (depends on UO_indent_braces)
    UO_indent_braces_no_struct,   // whether to not indent the struct braces (depends on UO_indent_braces)
    UO_indent_brace_parent,       // indent the braces based on the parent size (if=3, for=4, etc)
+   UO_indent_paren_open_brace,   // indent on paren level in '({', default by {
    UO_indent_label,              // 0=left >0=col from left, <0=sub from brace indent
    UO_indent_access_spec,        // same as indent_label, but for "private:", "public:"
    UO_indent_access_spec_body,   // indent private/public/protected inside a class (overrides indent_access_spec)
@@ -158,6 +161,7 @@ enum uncrustify_options
    UO_indent_func_throw,                    // indentation for standalone "throw" qualifier
 
    UO_indent_namespace,                     // indent stuff inside namespace braces
+   UO_indent_namespace_single_indent,       // indent one namespace and no sub-namepaces
    UO_indent_namespace_level,               // level to indent namespace blocks
    UO_indent_namespace_limit,               // no indent if namespace is longer than this
    UO_indent_extern,
@@ -194,6 +198,7 @@ enum uncrustify_options
 
    UO_sp_paren_brace,           // space between ')' and '{'
    UO_sp_fparen_brace,          // space between ')' and '{' of function
+   UO_sp_fparen_dbrace,         // space between ')' and '{{' of double-brace init
    UO_sp_sparen_brace,          // space between ')' and '{' of if, while, etc
 
    UO_sp_after_cast,            // space after C & D cast - "(int) a" vs "(int)a"
@@ -260,6 +265,7 @@ enum uncrustify_options
    UO_sp_assign_default,        // space around '=' in prototype
    UO_sp_before_assign,         // space before =, +=, etc
    UO_sp_after_assign,          // space after =, +=, etc
+   UO_sp_enum_paren,
    UO_sp_enum_assign,           // space around = in enum
    UO_sp_enum_before_assign,    // space before = in enum
    UO_sp_enum_after_assign,     // space after = in enum
@@ -289,6 +295,7 @@ enum uncrustify_options
    UO_sp_before_ptr_star,       // space before a '*' that is part of a type
    UO_sp_before_unnamed_ptr_star,
    UO_sp_after_ptr_star,        // space after a '*' that is part of a type
+   UO_sp_after_ptr_star_qualifier,  // space after a '*' next to a qualifier
    UO_sp_after_ptr_star_func,   // space between a '*' and a function proto/def
    UO_sp_ptr_star_paren,
    UO_sp_before_ptr_star_func,
@@ -494,6 +501,7 @@ enum uncrustify_options
    UO_nl_between_annotation,
    UO_nl_after_case,                 /* disallow nested "case 1: a=3;" */
    UO_nl_after_semicolon,            // disallow multiple statements on a line "a=1;b=4;"
+   UO_nl_paren_dbrace_open,
    UO_nl_after_brace_open,           // force a newline after a brace open
    UO_nl_after_brace_open_cmt,       // put the newline before the comment
    UO_nl_after_vbrace_open,          // force a newline after a virtual brace open
@@ -670,6 +678,7 @@ enum uncrustify_options
    UO_cmt_cpp_nl_start,         // put a blank /* at the start of a converted group
    UO_cmt_cpp_nl_end,           // put a nl before the */ in a converted group
    UO_cmt_multi_check_last,     // no space after '*' prefix when comment start and end are of equal length
+   UO_cmt_convert_tab_to_spaces,
 
    UO_cmt_insert_file_header,
    UO_cmt_insert_file_footer,

@@ -323,6 +323,7 @@ bool chunk_is_forin(chunk_t *pc)
    return false;
 }
 
+void set_chunk_type(chunk_t *pc, c_token_t tt);
+void set_chunk_parent(chunk_t *pc, c_token_t tt);
 
-
-#endif   /* CHUNK_LIST_H_INCLUDED */
+#endif /* CHUNK_LIST_H_INCLUDED */

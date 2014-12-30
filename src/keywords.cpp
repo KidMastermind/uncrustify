@@ -133,7 +133,7 @@ static const chunk_tag_t keywords[] =
    { "extern",           CT_EXTERN,       LANG_C | LANG_CPP | LANG_CS | LANG_D | LANG_VALA                            },
    { "false",            CT_WORD,         LANG_CPP | LANG_CS | LANG_D | LANG_JAVA | LANG_VALA                         },
    { "file",             CT_PP_FILE,      LANG_PAWN | FLAG_PP                                                         }, // PAWN
-   { "final",            CT_QUALIFIER,    LANG_D | LANG_ECMA                                                          },
+   { "final",            CT_QUALIFIER,    LANG_CPP | LANG_D | LANG_ECMA                                               },
    { "finally",          CT_FINALLY,      LANG_D | LANG_CS | LANG_ECMA | LANG_JAVA                                    },
    { "flags",            CT_TYPE,         LANG_VALA                                                                   },
    { "float",            CT_TYPE,         LANG_ALLC                                                                   },
@@ -174,7 +174,7 @@ static const chunk_tag_t keywords[] =
    { "mixin",            CT_CLASS,        LANG_D                                                                      }, // may need special handling
    { "module",           CT_D_MODULE,     LANG_D                                                                      },
    { "mutable",          CT_QUALIFIER,    LANG_C | LANG_CPP                                                           },
-   { "namespace",        CT_NAMESPACE,    LANG_C | LANG_CPP | LANG_CS | LANG_VALA                                     },
+   { "namespace",        CT_NAMESPACE,    LANG_CPP | LANG_CS | LANG_VALA                                              },
    { "native",           CT_NATIVE,       LANG_PAWN                                                                   }, // PAWN
    { "native",           CT_QUALIFIER,    LANG_JAVA | LANG_ECMA                                                       },
    { "new",              CT_NEW,          LANG_CPP | LANG_CS | LANG_D | LANG_JAVA | LANG_PAWN | LANG_VALA | LANG_ECMA }, // PAWN
@@ -192,6 +192,7 @@ static const chunk_tag_t keywords[] =
    { "params",           CT_TYPE,         LANG_CS                                                                     },
    { "pragma",           CT_PP_PRAGMA,    LANG_ALL | FLAG_PP                                                          }, // PAWN
    { "private",          CT_PRIVATE,      LANG_ALLC                                                                   }, // not C
+   { "property",         CT_PP_PROPERTY,  LANG_CS | FLAG_PP                                                           },
    { "protected",        CT_PRIVATE,      LANG_ALLC                                                                   }, // not C
    { "public",           CT_PRIVATE,      LANG_ALL                                                                    }, // PAWN // not C
    { "readonly",         CT_QUALIFIER,    LANG_CS                                                                     },
